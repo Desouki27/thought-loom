@@ -1,6 +1,4 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { AskLoom } from '../components/chat/AskLoom'
-import { NoteEditor } from '../components/editor/NoteEditor'
 import { LinkSuggestions } from '../components/panel/LinkSuggestions'
 import {
   createNote,
@@ -17,6 +15,12 @@ import type { Cluster, Note, NoteCluster, NoteLink } from '../lib/types'
 const LoomGraph = lazy(() =>
   import('../components/graph/LoomGraph').then((m) => ({ default: m.LoomGraph })),
 )
+const NoteEditor = lazy(() =>
+  import('../components/editor/NoteEditor').then((m) => ({ default: m.NoteEditor })),
+)
+const AskLoom = lazy(() =>
+  import('../components/chat/AskLoom').then((m) => ({ default: m.AskLoom })),
+)
 
 type PanelTab = 'links' | 'ask'
 
@@ -32,7 +36,6 @@ export function GraphPage() {
   const [reweaveError, setReweaveError] = useState<string | null>(null)
 
   async function refreshAll() {
-    setLoading(true)
     const [n, l, c, nc] = await Promise.all([
       listNotes(),
       listLinks(),
@@ -47,6 +50,8 @@ export function GraphPage() {
   }
 
   useEffect(() => {
+    // Initial data loading synchronizes with Supabase; state updates happen after the requests settle.
+    // oxlint-disable-next-line react/set-state-in-effect
     void refreshAll()
     // oxlint-disable-next-line exhaustive-deps
   }, [])
@@ -141,19 +146,22 @@ export function GraphPage() {
           {selectedNote ? (
             <>
               <div className="min-h-0 flex-1">
-                <NoteEditor
-                  note={selectedNote}
-                  onNoteSaved={(saved) =>
-                    setNotes((prev) => prev.map((n) => (n.id === saved.id ? saved : n)))
-                  }
-                  onLinksSuggested={(newLinks) =>
-                    setLinks((prev) => [
-                      ...prev.filter((l) => !newLinks.some((nl) => nl.id === l.id)),
-                      ...newLinks,
-                    ])
-                  }
-                  onDelete={() => handleDeleteNote(selectedNote.id)}
-                />
+                <Suspense fallback={<div className="p-4 text-sm text-white/40">Loading editor…</div>}>
+                  <NoteEditor
+                    key={selectedNote.id}
+                    note={selectedNote}
+                    onNoteSaved={(saved) =>
+                      setNotes((prev) => prev.map((n) => (n.id === saved.id ? saved : n)))
+                    }
+                    onLinksSuggested={(newLinks) =>
+                      setLinks((prev) => [
+                        ...prev.filter((l) => !newLinks.some((nl) => nl.id === l.id)),
+                        ...newLinks,
+                      ])
+                    }
+                    onDelete={() => handleDeleteNote(selectedNote.id)}
+                  />
+                </Suspense>
               </div>
               <div className="h-64 shrink-0 border-t border-white/10">
                 <div className="flex border-b border-white/10 text-xs">
@@ -183,13 +191,17 @@ export function GraphPage() {
                       }
                     />
                   ) : (
-                    <AskLoom notesById={notesById} onCiteNote={setSelectedNoteId} />
+                    <Suspense fallback={<div className="text-white/40">Loading Ask Loom…</div>}>
+                      <AskLoom notesById={notesById} onCiteNote={setSelectedNoteId} />
+                    </Suspense>
                   )}
                 </div>
               </div>
             </>
           ) : (
-            <AskLoom notesById={notesById} onCiteNote={setSelectedNoteId} />
+            <Suspense fallback={<div className="p-4 text-white/40">Loading Ask Loom…</div>}>
+              <AskLoom notesById={notesById} onCiteNote={setSelectedNoteId} />
+            </Suspense>
           )}
         </div>
       </div>

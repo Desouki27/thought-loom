@@ -18,24 +18,6 @@ export function NoteEditor({ note, onNoteSaved, onLinksSuggested, onDelete }: No
   const [status, setStatus] = useState<'idle' | 'saving' | 'weaving' | 'weave-failed'>('idle')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
-    setTitle(note.title)
-    setContent(note.content)
-    // Only reset on note switch — note.title/content also change after our
-    // own saves resolve, and re-running then would clobber in-flight edits.
-    // oxlint-disable-next-line exhaustive-deps
-  }, [note.id])
-
-  useEffect(() => {
-    if (title === note.title && content === note.content) return
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(save, SAVE_DEBOUNCE_MS)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-    // oxlint-disable-next-line exhaustive-deps
-  }, [title, content])
-
   async function save() {
     setStatus('saving')
     const saved = await updateNote(note.id, { title, content })
@@ -52,6 +34,16 @@ export function NoteEditor({ note, onNoteSaved, onLinksSuggested, onDelete }: No
       setStatus('weave-failed')
     }
   }
+
+  useEffect(() => {
+    if (title === note.title && content === note.content) return
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(save, SAVE_DEBOUNCE_MS)
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+    // oxlint-disable-next-line exhaustive-deps
+  }, [title, content])
 
   return (
     <div className="flex h-full flex-col" data-color-mode="dark">
