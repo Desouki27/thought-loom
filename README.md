@@ -2,6 +2,8 @@
 
 An AI-woven personal knowledge graph. Write notes; Thought Loom embeds them, suggests links between related ideas with a reasoned explanation, groups them into emergent themes, and lets you ask questions that get answered by synthesizing across your whole notebook — with citations back to the source notes.
 
+![Thought Loom graph view](docs/screenshots/graph-hero.png)
+
 ## How it weaves
 
 - **Auto-linking** — every note you save is embedded and compared against the rest of your notes. Genuinely related pairs (not just similar wording) are proposed as links you can accept or dismiss, each with a one-sentence reason from Claude.
@@ -50,6 +52,8 @@ cp .env.example .env   # fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
 npm install
 npm run dev
 ```
+
+Run `npm test` for the unit test suite (Vitest) — currently covers the citation-parsing and link-filtering logic in `src/lib/`.
 
 ## License
 

@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { AskLoom } from '../components/chat/AskLoom'
 import { NoteEditor } from '../components/editor/NoteEditor'
-import { LoomGraph } from '../components/graph/LoomGraph'
 import { LinkSuggestions } from '../components/panel/LinkSuggestions'
 import {
   createNote,
@@ -14,6 +13,10 @@ import {
 } from '../lib/api'
 import { supabase } from '../lib/supabaseClient'
 import type { Cluster, Note, NoteCluster, NoteLink } from '../lib/types'
+
+const LoomGraph = lazy(() =>
+  import('../components/graph/LoomGraph').then((m) => ({ default: m.LoomGraph })),
+)
 
 type PanelTab = 'links' | 'ask'
 
@@ -117,14 +120,20 @@ export function GraphPage() {
           {loading ? (
             <div className="flex h-full items-center justify-center text-white/40">Loading…</div>
           ) : (
-            <LoomGraph
-              notes={notes}
-              links={links}
-              clusters={clusters}
-              noteClusters={noteClusters}
-              onSelectNote={setSelectedNoteId}
-              selectedNoteId={selectedNoteId}
-            />
+            <Suspense
+              fallback={
+                <div className="flex h-full items-center justify-center text-white/40">Loading graph…</div>
+              }
+            >
+              <LoomGraph
+                notes={notes}
+                links={links}
+                clusters={clusters}
+                noteClusters={noteClusters}
+                onSelectNote={setSelectedNoteId}
+                selectedNoteId={selectedNoteId}
+              />
+            </Suspense>
           )}
         </div>
 

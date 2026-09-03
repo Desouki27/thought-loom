@@ -1,4 +1,5 @@
 import { setLinkStatus } from '../../lib/api'
+import { otherNoteId, pendingLinksForNote } from '../../lib/links'
 import type { Note, NoteLink } from '../../lib/types'
 
 interface LinkSuggestionsProps {
@@ -14,11 +15,7 @@ export function LinkSuggestions({
   notesById,
   onResolved,
 }: LinkSuggestionsProps) {
-  const pending = links.filter(
-    (l) =>
-      l.status === 'pending' &&
-      (l.source_note_id === currentNoteId || l.target_note_id === currentNoteId),
-  )
+  const pending = pendingLinksForNote(links, currentNoteId)
 
   if (pending.length === 0) {
     return <p className="text-sm text-white/30">No pending suggestions for this note.</p>
@@ -27,8 +24,7 @@ export function LinkSuggestions({
   return (
     <ul className="space-y-3">
       {pending.map((link) => {
-        const otherId = link.source_note_id === currentNoteId ? link.target_note_id : link.source_note_id
-        const other = notesById.get(otherId)
+        const other = notesById.get(otherNoteId(link, currentNoteId))
         return (
           <li key={link.id} className="rounded-lg border border-violet-400/20 bg-violet-400/5 p-3">
             <p className="text-sm font-medium text-white">{other?.title ?? 'Untitled'}</p>

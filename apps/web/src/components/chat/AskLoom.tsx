@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { askLoomStream } from '../../lib/api'
+import { citedNoteTitle, parseCitations } from '../../lib/citations'
 import type { Note } from '../../lib/types'
 
 interface DisplayMessage {
@@ -21,18 +22,15 @@ function renderWithCitations(
   notesById: Map<string, Note>,
   onCiteNote: (noteId: string) => void,
 ) {
-  const parts = text.split(/(\[\[note:[0-9a-fA-F-]+\]\])/g)
-  return parts.map((part, i) => {
-    const match = part.match(/^\[\[note:([0-9a-fA-F-]+)\]\]$/)
-    if (!match) return <span key={i}>{part}</span>
-    const note = notesById.get(match[1])
+  return parseCitations(text).map((part, i) => {
+    if (part.type === 'text') return <span key={i}>{part.text}</span>
     return (
       <button
         key={i}
-        onClick={() => onCiteNote(match[1])}
+        onClick={() => onCiteNote(part.noteId!)}
         className="mx-0.5 rounded-full bg-violet-500/20 px-2 py-0.5 text-xs text-violet-200 hover:bg-violet-500/30"
       >
-        {note?.title ?? 'note'}
+        {citedNoteTitle(part.noteId!, notesById)}
       </button>
     )
   })
